@@ -1,12 +1,23 @@
-const ProtocolRegistry = require('protocol-registry'); // TODO: fix import
+import $ from 'jquery';
+
+import GUI from './gui';
+import serial from './serial';
+import PortHandler from "./port_handler";
+
+export const protocol = 'btfltcp';
+export const protocolScheme = `${protocol}://`;
 
 export async function registerProtocolURI() {
-    const protocol = 'btfltcp';
-    const protocolScheme = `${protocol}://`;
+    if (GUI.isCordova()) {
+        // TODO: handle the custom URI scheme in Cordova
+        return;
+    }
+
     const command = `"${process.execPath}" $_URL_`;
 
     console.log(`Registering ${protocolScheme} to '${command}'`);
     try {
+        const ProtocolRegistry = require('protocol-registry');
         await ProtocolRegistry.register({
             protocol,
             command,
@@ -17,5 +28,29 @@ export async function registerProtocolURI() {
         console.log(`Successfully registered ${protocolScheme} to '${command}'`);
     } catch (err) {
         console.error(`Failed to register ${protocolScheme} to '${command}' with error: `, err);
+    }
+
+    handleNWJSArgv();
+
+}
+
+function connectTcp(tcpUrl) {
+    // Explicitly add the 'manual' select option if the port options haven't loaded yet
+    // (e.g. during a cold start)
+    if ($('#port [value="manual"]').length === 0){
+        PortHandler.addManualPortSelectOption();
+    }
+
+    $('#port').val('manual').trigger('change');
+    $('#port-override').val(tcpUrl).trigger('change');
+    $("div.connect_controls a.connect").trigger('click');
+}
+
+function handleNWJSArgv() {
+    const connectionString = nw?.App?.argv?.[0] || '';
+    const tcpUrl = `tcp://${connectionString.replace(protocolScheme, '')}`;
+    if (tcpUrl.match(serial.tcpUrlRegex)) {
+        console.log(`Connecting to ${tcpUrl} (from invocation with "${connectionString}")`);
+        connectTcp(tcpUrl);
     }
 }
