@@ -32,6 +32,7 @@ export async function registerProtocolURI() {
 
     handleNWJSArgv();
 
+    handleNWJSOpenEvents();
 }
 
 function connectTcp(tcpUrl) {
@@ -53,4 +54,22 @@ function handleNWJSArgv() {
         console.log(`Connecting to ${tcpUrl} (from invocation with "${connectionString}")`);
         connectTcp(tcpUrl);
     }
+}
+
+function handleNWJSOpenEvents() {
+    nw?.App?.on('open', (eventConnectionString) => {
+        console.log(`Received NW.js "open" event: ${eventConnectionString}`);
+
+        if (!eventConnectionString) return;
+
+        const connectionStringRegex = new RegExp(`^.*${protocolScheme}(.*)$`);
+        const url = eventConnectionString.match(connectionStringRegex)?.[1];
+        if (!url) return;
+
+        const tcpUrl = `tcp://${url}`;
+        if (tcpUrl.match(serial.tcpUrlRegex)) {
+            console.log(`Connecting to ${tcpUrl} (from "open" event with ${eventConnectionString})`);
+            connectTcp(tcpUrl);
+        }
+    });
 }
