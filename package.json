@@ -63,6 +63,7 @@
     "multiple-select": "^1.6.0",
     "nw-vue-devtools-prebuilt": "^0.0.10",
     "ol": "^8.2.0",
+    "protocol-registry": "^1.4.1",
     "select2": "^4.0.13",
     "semver-min": "^0.7.2",
     "short-unique-id": "^4.4.4",
