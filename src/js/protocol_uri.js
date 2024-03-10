@@ -9,7 +9,7 @@ export const protocolScheme = `${protocol}://`;
 
 export async function registerProtocolURI() {
     if (GUI.isCordova()) {
-        // TODO: handle the custom URI scheme in Cordova
+        handleCordovaOpenEvents();
         return;
     }
 
@@ -72,4 +72,18 @@ function handleNWJSOpenEvents() {
             connectTcp(tcpUrl);
         }
     });
+}
+
+function handleCordovaOpenEvents() {
+    // based on https://www.npmjs.com/package/cordova-plugin-customurlscheme
+    window.handleOpenURL = (url) => {
+        console.log(`Android deep link open event URL: ${url}`);
+        const tcpUrl = `tcp://${url.replace(protocolScheme, '')}`;
+        if (tcpUrl.match(serial.tcpUrlRegex)) {
+            console.log(`Connecting to ${tcpUrl} (from Android deep link open even with URL: "${url}")`);
+            connectTcp(tcpUrl);
+        }
+    };
+
+    console.log(`Listening to ${protocolScheme} Android deep links`);
 }
